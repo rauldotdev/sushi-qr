@@ -14,7 +14,8 @@
     "docker:up": "docker compose -f infra/docker-compose.yml up -d",
     "docker:down": "docker compose -f infra/docker-compose.yml down",
     "db:migrate": "tsx src/main/database/migrate.ts",
-    "db:seed": "tsx src/main/database/seed.ts"
+    "db:seed": "tsx src/main/database/seed.ts",
+    "prepare": "husky"
   },
   "dependencies": {
     "argon2": "^0.41.1",
@@ -27,6 +28,7 @@
   "devDependencies": {
     "@types/node": "^22.10.7",
     "@types/pg": "^8.11.10",
+    "husky": "^9.1.7",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
     "vitest": "^5.0.4"
