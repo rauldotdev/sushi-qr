@@ -1,6 +1,9 @@
 import Fastify, { FastifyInstance, FastifyError } from 'fastify';
+import helmet from '@fastify/helmet';
+import cors from '@fastify/cors';
 import { db } from './database/db.js';
 import { redis } from './redis/redisClient.js';
+import { env } from './config/env.js';
 import { AppError } from '../common/errors/appError.js';
 
 export function buildApp(): FastifyInstance {
@@ -8,6 +11,49 @@ export function buildApp(): FastifyInstance {
     logger: process.env.NODE_ENV === 'test' ? false : {
       level: 'info'
     }
+  });
+
+  // 1. Cabeceras de seguridad HTTP (HSTS, CSP, X-Content-Type-Options, etc.)
+  app.register(helmet, {
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", 'data:', 'blob:'],
+        connectSrc: ["'self'", 'https://localhost', 'wss://localhost'],
+        fontSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+        frameAncestors: ["'none'"],
+        upgradeInsecureRequests: []
+      }
+    },
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true
+    },
+    referrerPolicy: {
+      policy: 'strict-origin-when-cross-origin'
+    },
+    xContentTypeOptions: true
+  });
+
+  // 2. Control estricto de CORS
+  const allowedOrigins = env.CORS_ORIGINS.split(',').map((o) => o.trim());
+  app.register(cors, {
+    origin: (origin, cb) => {
+      // Permitir peticiones sin origin (como tests locales o llamadas internas/Caddy)
+      if (!origin || allowedOrigins.includes(origin)) {
+        cb(null, true);
+        return;
+      }
+      cb(new AppError('CORS_FORBIDDEN', `Origen no permitido por CORS: ${origin}`, 403), false);
+    },
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    credentials: true
   });
 
   // Manejador centralizado de errores con formato { code, message }
