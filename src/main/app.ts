@@ -13,6 +13,7 @@ import { adminTableRoutes } from '../admin/controllers/adminTableController.js';
 import { adminCatalogRoutes } from '../admin/controllers/adminCatalogController.js';
 import { customerSessionRoutes } from '../customer/controllers/customerSessionController.js';
 import { customerMenuRoutes } from '../customer/controllers/menuController.js';
+import { orderRoutes } from '../orders/controllers/orderController.js';
 
 export function buildApp(): FastifyInstance {
   const app = Fastify({
@@ -93,6 +94,7 @@ export function buildApp(): FastifyInstance {
   app.register(adminCatalogRoutes, { prefix: '/api/v1/admin' });
   app.register(customerSessionRoutes, { prefix: '/api/v1' });
   app.register(customerMenuRoutes, { prefix: '/api/v1' });
+  app.register(orderRoutes, { prefix: '/api/v1/orders' });
 
   // Manejador centralizado de errores con formato { code, message }
   app.setErrorHandler((error: FastifyError | Error | unknown, request, reply) => {
