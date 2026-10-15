@@ -180,7 +180,7 @@ VALUES
     'Admin Principal',
     'admin@sakura.es',
     'admin',
-    '$argon2id$v=19$m=65536,t=3,p=4$vQh27P9XgN8Wq6+87nZ59A$1t1kSj4B889tC4+J10fF+7k7XwO4oR3903RzO1Yw6x4'
+    '$argon2id$v=19$m=65536,t=3,p=4$2GbevrZAm4w+Qh9wX5Ygiw$T3xmTZxH4HxrzBQZJdvZYZmECZhNgjLxPR//9YGm4h0'
 ),
 (
     '00eebc99-9c0b-4ef8-bb6d-6bb9bd380a72',
@@ -188,7 +188,7 @@ VALUES
     'Camarero Sala 1',
     'waiter@sakura.es',
     'sala',
-    '$argon2id$v=19$m=65536,t=3,p=4$vQh27P9XgN8Wq6+87nZ59A$1t1kSj4B889tC4+J10fF+7k7XwO4oR3903RzO1Yw6x4'
+    '$argon2id$v=19$m=65536,t=3,p=4$2GbevrZAm4w+Qh9wX5Ygiw$T3xmTZxH4HxrzBQZJdvZYZmECZhNgjLxPR//9YGm4h0'
 ),
 (
     '00eebc99-9c0b-4ef8-bb6d-6bb9bd380a73',
@@ -196,6 +196,6 @@ VALUES
     'Chef Cocina 1',
     'kitchen@sakura.es',
     'cocina',
-    '$argon2id$v=19$m=65536,t=3,p=4$vQh27P9XgN8Wq6+87nZ59A$1t1kSj4B889tC4+J10fF+7k7XwO4oR3903RzO1Yw6x4'
+    '$argon2id$v=19$m=65536,t=3,p=4$2GbevrZAm4w+Qh9wX5Ygiw$T3xmTZxH4HxrzBQZJdvZYZmECZhNgjLxPR//9YGm4h0'
 )
-ON CONFLICT DO NOTHING;
+ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash;

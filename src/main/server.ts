@@ -27,8 +27,9 @@ async function bootstrap() {
 
     // 2. Iniciar servidor Fastify
     await app.listen({ port: env.PORT, host: env.HOST });
-    console.log(`🚀 Servidor ejecutándose en http://${env.HOST}:${env.PORT}`);
-    console.log(`🩺 Health check disponible en http://${env.HOST}:${env.PORT}/api/v1/health`);
+    console.log(`🚀 Servidor Fastify escuchando internamente en puerto ${env.PORT}`);
+    console.log(`🔒 Acceso público seguro configurado a través de Caddy en https://localhost`);
+    console.log(`🩺 Health check disponible en https://localhost/api/v1/health`);
   } catch (err) {
     console.error('❌ Error fatal al iniciar el servidor:', err);
     process.exit(1);
