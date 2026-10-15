@@ -10,12 +10,28 @@ import { authenticateStaff, authenticateCustomerSession } from '../common/middle
 import { authRoutes } from '../auth/controllers/authController.js';
 import { waiterTableRoutes } from '../kitchen/controllers/waiterTableController.js';
 import { adminTableRoutes } from '../admin/controllers/adminTableController.js';
+import { adminCatalogRoutes } from '../admin/controllers/adminCatalogController.js';
 import { customerSessionRoutes } from '../customer/controllers/customerSessionController.js';
+import { customerMenuRoutes } from '../customer/controllers/menuController.js';
 
 export function buildApp(): FastifyInstance {
   const app = Fastify({
     logger: process.env.NODE_ENV === 'test' ? false : {
       level: 'info'
+    }
+  });
+
+  // Manejar cuerpos vacíos con Content-Type: application/json de forma segura
+  app.addContentTypeParser('application/json', { parseAs: 'string' }, (_req, body, done) => {
+    if (!body || (typeof body === 'string' && body.trim() === '')) {
+      done(null, {});
+      return;
+    }
+    try {
+      done(null, JSON.parse(body as string));
+    } catch (err: any) {
+      err.statusCode = 400;
+      done(err, undefined);
     }
   });
 
@@ -74,7 +90,9 @@ export function buildApp(): FastifyInstance {
   app.register(authRoutes, { prefix: '/api/v1/staff' });
   app.register(waiterTableRoutes, { prefix: '/api/v1/staff/tables' });
   app.register(adminTableRoutes, { prefix: '/api/v1/admin/tables' });
+  app.register(adminCatalogRoutes, { prefix: '/api/v1/admin' });
   app.register(customerSessionRoutes, { prefix: '/api/v1' });
+  app.register(customerMenuRoutes, { prefix: '/api/v1' });
 
   // Manejador centralizado de errores con formato { code, message }
   app.setErrorHandler((error: FastifyError | Error | unknown, request, reply) => {
