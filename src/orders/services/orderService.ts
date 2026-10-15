@@ -2,6 +2,7 @@ import { db } from '../../main/database/db.js';
 import { AppError } from '../../common/errors/appError.js';
 import { OrderItemDto } from '../dtos/createOrder.dto.js';
 import { buffetRulesEngine, DishValidationContext } from './buffetRulesEngine.js';
+import { realtimeService } from '../../realtime/services/realtimeService.js';
 
 export class OrderService {
   /**
@@ -148,6 +149,25 @@ export class OrderService {
       }
 
       await client.query('COMMIT');
+
+      // Consultar número de mesa para la comanda de cocina y emitir eventos en tiempo real
+      db.query(
+        `SELECT t.numero as table_number
+         FROM table_session s
+         JOIN "table" t ON t.id = s.table_id
+         WHERE s.id = $1`,
+        [sessionId]
+      ).then((tableRes) => {
+        const tableNumber = tableRes.rows[0]?.table_number || null;
+        const eventPayload = {
+          round: newRound,
+          tableNumber,
+          lines: insertedLines
+        };
+        realtimeService.publishKitchenEvent('ORDER_ROUND_CREATED', eventPayload).catch(console.error);
+        realtimeService.publishSessionEvent(sessionId, 'ORDER_ROUND_CREATED', eventPayload).catch(console.error);
+      }).catch(console.error);
+
       return { round: newRound, lines: insertedLines, isIdempotentReplay: false };
     } catch (err: any) {
       await client.query('ROLLBACK');
@@ -219,6 +239,16 @@ export class OrderService {
     }
 
     await db.query(`UPDATE order_line SET estado = 'cancelado' WHERE id = $1`, [lineId]);
+
+    const cancelPayload = {
+      lineId,
+      roundId: line.round_id,
+      dishId: line.dish_id,
+      estado: 'cancelado'
+    };
+    realtimeService.publishKitchenEvent('ORDER_LINE_UPDATED', cancelPayload).catch(console.error);
+    realtimeService.publishSessionEvent(sessionId, 'ORDER_LINE_UPDATED', cancelPayload).catch(console.error);
+
     return { lineId, estado: 'cancelado' };
   }
 }

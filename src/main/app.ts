@@ -2,6 +2,7 @@ import Fastify, { FastifyInstance, FastifyError } from 'fastify';
 import helmet from '@fastify/helmet';
 import cors from '@fastify/cors';
 import fastifyJwt from '@fastify/jwt';
+import fastifyWebsocket from '@fastify/websocket';
 import { db } from './database/db.js';
 import { redis } from './redis/redisClient.js';
 import { env } from './config/env.js';
@@ -9,11 +10,13 @@ import { AppError } from '../common/errors/appError.js';
 import { authenticateStaff, authenticateCustomerSession } from '../common/middleware/authMiddleware.js';
 import { authRoutes } from '../auth/controllers/authController.js';
 import { waiterTableRoutes } from '../kitchen/controllers/waiterTableController.js';
+import { kitchenRoutes } from '../kitchen/controllers/kitchenController.js';
 import { adminTableRoutes } from '../admin/controllers/adminTableController.js';
 import { adminCatalogRoutes } from '../admin/controllers/adminCatalogController.js';
 import { customerSessionRoutes } from '../customer/controllers/customerSessionController.js';
 import { customerMenuRoutes } from '../customer/controllers/menuController.js';
 import { orderRoutes } from '../orders/controllers/orderController.js';
+import { realtimeRoutes } from '../realtime/controllers/realtimeController.js';
 
 export function buildApp(): FastifyInstance {
   const app = Fastify({
@@ -84,17 +87,22 @@ export function buildApp(): FastifyInstance {
     secret: env.JWT_SECRET
   });
 
+  // 4. Soporte para WebSockets en tiempo real
+  app.register(fastifyWebsocket);
+
   app.decorate('authenticateStaff', authenticateStaff);
   app.decorate('authenticateCustomerSession', authenticateCustomerSession);
 
-  // 4. Registro de Rutas por Dominio
+  // 5. Registro de Rutas por Dominio
   app.register(authRoutes, { prefix: '/api/v1/staff' });
   app.register(waiterTableRoutes, { prefix: '/api/v1/staff/tables' });
+  app.register(kitchenRoutes, { prefix: '/api/v1/staff' });
   app.register(adminTableRoutes, { prefix: '/api/v1/admin/tables' });
   app.register(adminCatalogRoutes, { prefix: '/api/v1/admin' });
   app.register(customerSessionRoutes, { prefix: '/api/v1' });
   app.register(customerMenuRoutes, { prefix: '/api/v1' });
   app.register(orderRoutes, { prefix: '/api/v1/orders' });
+  app.register(realtimeRoutes);
 
   // Manejador centralizado de errores con formato { code, message }
   app.setErrorHandler((error: FastifyError | Error | unknown, request, reply) => {

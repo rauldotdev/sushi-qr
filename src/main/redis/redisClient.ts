@@ -22,6 +22,8 @@ class RedisManager {
     });
   }
 
+  private subClient: Redis | null = null;
+
   public static getInstance(): RedisManager {
     if (!RedisManager.instance) {
       RedisManager.instance = new RedisManager();
@@ -33,9 +35,22 @@ class RedisManager {
     return this.client;
   }
 
+  public getSubscriberClient(): Redis {
+    if (!this.subClient) {
+      this.subClient = this.client.duplicate();
+      this.subClient.on('error', (err) => {
+        console.error('Redis Subscriber Client Error:', err);
+      });
+    }
+    return this.subClient;
+  }
+
   public async connect(): Promise<void> {
     if (this.client.status === 'wait') {
       await this.client.connect();
+    }
+    if (this.subClient && this.subClient.status === 'wait') {
+      await this.subClient.connect();
     }
   }
 
@@ -58,6 +73,10 @@ class RedisManager {
   }
 
   public async close(): Promise<void> {
+    if (this.subClient && this.subClient.status !== 'end') {
+      await this.subClient.quit();
+      this.subClient = null;
+    }
     if (this.client.status !== 'end') {
       await this.client.quit();
     }
