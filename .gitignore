@@ -43,3 +43,7 @@ Thumbs.db
 # Agent & AI configs
 .agents/
 skills-lock.json
+
+# Local scripts & scratch
+scripts/
+

@@ -18,7 +18,7 @@ const envSchema = z.object({
   REDIS_PASSWORD: z.string().optional().default(''),
   REDIS_URL: z.string().optional(),
   JWT_SECRET: z.string().min(16, 'JWT_SECRET must have at least 16 characters'),
-  CORS_ORIGINS: z.string().default('https://localhost,http://localhost:3000')
+  CORS_ORIGINS: z.string().default('https://localhost,https://127.0.0.1')
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
